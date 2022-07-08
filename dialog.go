@@ -1,6 +1,12 @@
 package main
 
-import "github.com/mattn/go-gtk/gtk"
+import (
+	"unsafe"
+
+	"github.com/mattn/go-gtk/gdk"
+	"github.com/mattn/go-gtk/glib"
+	"github.com/mattn/go-gtk/gtk"
+)
 
 type dialogResult int
 
@@ -51,6 +57,14 @@ func handleDialog(conf *config) (dialogResult, string) {
 		input = gtk.NewEntry()
 		input.SetVisibility(false)
 		input.SetActivatesDefault(true)
+		input.Connect("key-press-event", func(ctx *glib.CallbackContext) {
+			arg := ctx.Args(0)
+			event := *(**gdk.EventKey)(unsafe.Pointer(&arg))
+			if event.Keyval == gdk.KEY_Return {
+				ok := dialog.GetWidgetForResponse(gtk.RESPONSE_OK)
+				ok.Activate()
+			}
+		})
 		table.AttachDefaults(input, 1, 2, 0, 1)
 
 		dialog.GetVBox().PackEnd(table, true, true, 2)
